@@ -1,0 +1,132 @@
+---
+title: "UCMAIT_seurat_analysis"
+author: "Xuqian Tan"
+date: "7/18/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r fig.width=22, fig.height=25, warning=FALSE, error=FALSE, message=FALSE, echo=FALSE, comment=NA}
+library(plyr)
+library(ggplot2)
+library(RColorBrewer)
+library(reshape2)
+library(gplots)
+library(gtools)
+library(stats)
+library(lattice)
+library(latticeExtra)
+library(grid)
+library(gridExtra)
+library(Seurat)
+library(Rtsne)
+```
+
+
+```{r fig.width=22, fig.height=25, warning=FALSE, error=FALSE, message=FALSE, echo=FALSE, comment=NA}
+
+## set baseDir if Knitting with RStudio button
+baseDir <- "~/Desktop/Su Lab/UC-MAIT/"
+
+## sets path if run from runAnalysis.R
+#currentFile <- rstudioapi::getActiveDocumentContext()$path
+#baseDir <- gsub("single_cell_insulin/.*", "single_cell_insulin/", currentFile)
+
+#### source function scripts ####
+funcDir <- paste(baseDir, "src/functions/", sep="")
+funcFiles <- c("formatRaw.R", 
+               "dataLoadUCMAIT.R", 
+               "cleanCt.R")
+funcFiles <- paste(funcDir, funcFiles, sep="")
+for(file in funcFiles){
+  source(file)
+}
+
+```
+
+
+```{r fig.width=22, fig.height=25, warning=FALSE, error=FALSE, message=FALSE, echo=FALSE, comment=NA}
+## load data
+ctTable <- dataLoadUCMAIT()
+
+## remove blood samples for now
+#ctTable <- subset(ctTable, cellSource != "PB")
+
+## calculate log2Ex, reformat ctTable, and normalize values
+ctNorm <- cleanCt(ctTable, summaryOutput=T, cumExpCutoff = F)
+
+```
+
+
+```{r}
+# Prepare dataframe for t-sne
+ctsub <- subset(ctNorm, select=-c(cellSource, probe, age, SPA, SPAM, cellType))
+ctInvert <- data.frame(t(ctsub[-1]))
+colnames(ctInvert) <- ctsub[, 1]
+```
+
+
+```{r}
+set.seed(1)
+tsne <- Rtsne(ctInvert, perplexity=30, check_duplicates = FALSE)
+# visualizing
+plot(tsne$Y, main="tSNE", xlab="tSNE dimension 1", ylab="tSNE dimension 2", asp = 1, pch = 20)
+```
+
+
+```{r}
+ctdata <- CreateSeuratObject(counts = ctInvert)
+ctdata
+#ctdata <- NormalizeData(ctdata)
+```
+
+```{r fig.width=5, fig.height=2.5, warning=FALSE, error=FALSE, message=FALSE, echo=FALSE, comment=NA}
+ctdata <- FindVariableFeatures(ctdata)
+
+# Identify the 10 most highly variable genes
+top10 <- head(VariableFeatures(ctdata), 10)
+
+# plot variable features with and without labels
+plot1 <- VariableFeaturePlot(ctdata)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+CombinePlots(plots = list(plot1, plot2))
+```
+
+
+```{r fig.width=5, fig.height=2.5, warning=FALSE, error=FALSE, message=FALSE, echo=FALSE, comment=NA}
+ctdata <- ScaleData(ctdata)
+ctdata <- RunPCA(ctdata, verbose = FALSE)
+VizDimLoadings(ctdata, dims = 1:2, reduction = "pca")
+```
+
+```{r}
+DimPlot(ctdata)
+```
+
+```{r}
+ctdata <- JackStraw(object = ctdata,num.replicate = 100, dim = 20)
+ctdata <- ScoreJackStraw(ctdata, dim = 1:20)
+JackStrawPlot(object = ctdata, dims = 1:20)
+ElbowPlot(ctdata, ndims = 20)
+```
+
+
+```{r}
+ctdata <- FindNeighbors(ctdata, dims = 1:20)
+ctdata <- FindClusters(ctdata, resolution = 0.5)
+ctdata <- RunTSNE(ctdata, dims = 1:6, reduction.name = "pca")
+```
+
+```{r}
+DimPlot(ctdata, label = TRUE)
+```
+
+```{r}
+markers = FindAllMarkers(ctdata)
+```
+
+
+
