@@ -28,7 +28,7 @@ library(Rtsne)
 ```{r fig.width=22, fig.height=25, warning=FALSE, error=FALSE, message=FALSE, echo=FALSE, comment=NA}
 
 ## set baseDir if Knitting with RStudio button
-baseDir <- "~/Desktop/Su Lab/UC-MAIT/"
+baseDir <- "~/Desktop/Su Lab/single_cell_UCMAIT/"
 
 ## sets path if run from runAnalysis.R
 #currentFile <- rstudioapi::getActiveDocumentContext()$path
@@ -92,7 +92,7 @@ ctClust <- clusterFilter(ctNorm, testK = T, numCenters = 9, plotHeatmap=T, plotC
                           heatmapTissueLabel = "UCMAIT samples",
                           fisherTests = c("probe", "tissue", "age"),
                          # fisherTests = NULL,
-                          cumulativeExpHist = T, filterClusters = T, clustersToRemove = c(6))
+                          cumulativeExpHist = T, filterClusters = T, clustersToRemove = c(5))
 ```
 
 
@@ -151,20 +151,11 @@ violinPlot(ctGenes=ctClust,
 ##  Differentially expressed genes between patients
 violinPlot(ctGenes=ctClust, 
            byFactor="probe", 
-           factorOrder=c("UCM5", "UCM6", "UCM10", "UCM12", "UCM13", "UCM14", "UCM15", "UCM16", "UCM17", "NBD1", "NBD3", "NBD4"),
+           factorOrder=c("UCM5", "UCM6", "UCM10", "UCM12", "UCM13", "UCM14", "UCM15", "UCM16", "NBD1", "NBD3", "NBD4"),
            groupLabel="patients", 
            extraLabel="for human samples",
            dotSize = 1.5, 
            dotAlpha = 0.3)
-
-##  Differentially expressed genes between phenotypes
-# violinPlot(ctGenes=ctClust, 
-#            byFactor="patient", 
-#            factorOrder=c("UCM", "NBD"),
-#            groupLabel="phenotypes", 
-#            extraLabel="for human samples",
-#            dotSize = 1.5, 
-#            dotAlpha = 0.3)
 
 ##  Differentially expressed genes between tissues
 violinPlot(ctGenes=ctClust, 
@@ -184,6 +175,16 @@ violinPlot(ctGenes=ctClust,
            dotSize = 1.5, 
            dotAlpha = 0.3)
 
+##  Differentially expressed genes between phenotypes
+ctClust[grep("UCM", ctClust$probe, fixed=TRUE), "cellSource"] <- "UCM"
+ctClust[grep("NBD", ctClust$probe, fixed=TRUE), "cellSource"] <- "NBD"
+violinPlot(ctGenes=ctClust,
+           byFactor="cellSource",
+           factorOrder=c("UCM", "NBD"),
+           groupLabel="phenotypes",
+           extraLabel="for human samples",
+           dotSize = 1.5,
+           dotAlpha = 0.3)
 
 #### bottom ####
 ```
