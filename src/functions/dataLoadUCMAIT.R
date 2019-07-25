@@ -105,7 +105,7 @@ dataLoadUCMAIT <- function(){
   
   ## everything
   ctTableCombine <- rbind(ctTable1, ctTable2, ctTable3, ctTable4, ctTable5, ctTable6, ctTable7, ctTable8, ctTable9)
-  #ctTableCombine <- rbind(ctTableCombine, ctTable10)
+  ctTableCombine <- rbind(ctTableCombine, ctTable10)
   
   ## change column names
   names(ctTableCombine)[c(2, 5, 7)] <- c("cellType", "gene", "ct")

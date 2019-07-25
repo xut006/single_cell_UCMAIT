@@ -1,5 +1,5 @@
 ---
-title: "UC-MAIT analysis"
+title: "UC-MAIT analysis (all together)"
 output:
   pdf_document: default
   html_document: default
@@ -62,7 +62,13 @@ for(file in funcFiles){
 ctTable <- dataLoadUCMAIT()
 
 ## remove blood samples for now
-#ctTable <- subset(ctTable, cellSource != "PB")
+#ctTable <- subset(ctTable, cellSource != "blood")
+
+## remove tissue samples for now
+# ctTable <- subset(ctTable, cellSource != "tissue")
+## adjust the tag for blood_only analysis
+# ctTable[grep("UCM", ctTable$probe, fixed=TRUE), "cellSource"] <- "UCM"
+# ctTable[grep("NBD", ctTable$probe, fixed=TRUE), "cellSource"] <- "NBD"
 
 ## calculate log2Ex, reformat ctTable, and normalize values
 ctNorm <- cleanCt(ctTable, summaryOutput=T, cumExpCutoff = F, normGene = "none")
@@ -70,33 +76,21 @@ ctNorm <- cleanCt(ctTable, summaryOutput=T, cumExpCutoff = F, normGene = "none")
 ```
 
 
+
+
 ```{r fig.width=22, fig.height=25, warning=FALSE, error=FALSE, message=FALSE, echo=FALSE, comment=NA}
 ## cluster and filter
-# ctClust <- clusterFilter(ctNorm, testK = F, numCenters = 6, plotHeatmap=F, plotClustOnly=F,
-#                           heatmapFactor = "kmeans.cluster", heatmapColorBy = "source",
-#                           heatmapTissueLabel = "insulin samples", 
-#                           fisherTests = c("probe", "tissue", "age", "mouse"),
-#                           cumulativeExpHist = F, filterClusters = T, clustersToRemove = c(1, 2, 5))
-# 
-# 
-# ## cluster again to check performance
-# ctClust <- subset(ctClust, select = -kmeans.cluster)
-# ctClust <- clusterFilter(ctClust, testK = F, numCenters = 6, plotHeatmap=T, plotClustOnly=F, 
-#                           heatmapFactor = "kmeans.cluster", 
-#                           heatmapColorBy = c("age", "source", "probe"),
-#                           heatmapTissueLabel = "filtered insulin samples", 
-#                           fisherTests = c("probe", "tissue", "age", "mouse", "probe.age", "probe.tissue", "age.tissue", "probe.tissue.age"),
-#                           cumulativeExpHist = F, filterClusters = F, clustersToRemove = NULL)
 ctClust <- clusterFilter(ctNorm, testK = T, numCenters = 9, plotHeatmap=T, plotClustOnly=F,
                           heatmapFactor = "kmeans.cluster", heatmapColorBy = c("age", "probe"),
                           heatmapTissueLabel = "UCMAIT samples",
                           fisherTests = c("probe", "tissue", "age"),
                          # fisherTests = NULL,
-                          cumulativeExpHist = T, filterClusters = T, clustersToRemove = c(5))
+                          cumulativeExpHist = T, filterClusters = T, clustersToRemove = c(6))
 ```
 
 
 ```{r fig.width=22, fig.height=25, warning=FALSE, error=FALSE, message=FALSE, echo=FALSE, comment=NA}
+## cluster again to check performance
 ctClust <- subset(ctClust, select = -kmeans.cluster)
 ctClust <- clusterFilter(ctClust, testK = T, numCenters = 8, plotHeatmap=T, plotClustOnly=F,
                           heatmapFactor = "kmeans.cluster",
@@ -105,26 +99,6 @@ ctClust <- clusterFilter(ctClust, testK = T, numCenters = 8, plotHeatmap=T, plot
                           fisherTests = c("probe", "tissue", "age"),
                          # fisherTests = NULL,
                           cumulativeExpHist = T, filterClusters = F, clustersToRemove = NULL)
-
-
-## cluster again to check performance
-# ctClust <- subset(ctClust, select = -kmeans.cluster)
-# ctClust <- clusterFilter(ctClust, testK = T, numCenters = 5, plotHeatmap=T, plotClustOnly=F, 
-#                           heatmapFactor = "kmeans.cluster", 
-#                           heatmapColorBy = c("age", "source", "probe"),
-#                           heatmapTissueLabel = "filtered insulin samples", 
-#                           fisherTests = c("probe", "tissue", "age", "mouse", "probe.age", "probe.tissue", "age.tissue", "probe.tissue.age"),
-#                          # fisherTests = NULL,
-#                           cumulativeExpHist = T, filterClusters = T, clustersToRemove = c(4))
-
-# ctClust <- subset(ctClust, select = -kmeans.cluster)
-# ctClust <- clusterFilter(ctClust, testK = T, numCenters = 4, plotHeatmap=T, plotClustOnly=F,
-#                           heatmapFactor = "kmeans.cluster",
-#                           heatmapColorBy = c("age", "source", "probe"),
-#                           heatmapTissueLabel = "filtered insulin samples",
-#                           fisherTests = c("probe", "tissue", "age", "mouse", "probe.age", "probe.tissue", "age.tissue", "probe.tissue.age"),
-#                           cumulativeExpHist = T, filterClusters = F, clustersToRemove = NULL)
-
 
 ```
 
@@ -135,14 +109,13 @@ plotTSNE(ctClust, colorby = c("kmeans.cluster", "probe", "patient", "age"))
 ```
 
 
-
 ```{r fig.width=22, fig.height=25, warning=FALSE, error=FALSE, message=FALSE, echo=FALSE, comment=NA}
 #### violins ####
 
 ## Differentially expressed genes between cluster
 violinPlot(ctGenes=ctClust, 
            byFactor="kmeans.cluster", 
-           factorOrder=c(1:8),
+           factorOrder=c(1:5),
            groupLabel="clusters", 
            extraLabel="for human samples",
            dotSize = 1.5, 
@@ -151,28 +124,28 @@ violinPlot(ctGenes=ctClust,
 ##  Differentially expressed genes between patients
 violinPlot(ctGenes=ctClust, 
            byFactor="probe", 
-           factorOrder=c("UCM5", "UCM6", "UCM10", "UCM12", "UCM13", "UCM14", "UCM15", "UCM16", "NBD1", "NBD3", "NBD4"),
+           factorOrder=c("UCM5", "UCM6", "UCM10", "UCM12", "UCM13", "UCM14", "UCM15", "UCM16", "UCM17", "NBD1", "NBD3", "NBD4"),
            groupLabel="patients", 
            extraLabel="for human samples",
            dotSize = 1.5, 
            dotAlpha = 0.3)
 
 ##  Differentially expressed genes between tissues
-violinPlot(ctGenes=ctClust, 
-           byFactor="cellSource", 
+violinPlot(ctGenes=ctClust,
+           byFactor="cellSource",
            factorOrder=c("blood", "tissue"),
-           groupLabel="tissues", 
+           groupLabel="tissues",
            extraLabel="for human samples",
-           dotSize = 1.5, 
+           dotSize = 1.5,
            dotAlpha = 0.3)
 
 ##  Differentially expressed genes between tissues
-violinPlot(ctGenes=ctClust, 
-           byFactor="age", 
-           factorOrder=c("blood", "infl", "uninfl"),
-           groupLabel="tissues", 
+violinPlot(ctGenes=ctClust,
+           byFactor="age",
+           factorOrder=c("infl", "uninfl"),
+           groupLabel="tissues",
            extraLabel="for human samples",
-           dotSize = 1.5, 
+           dotSize = 1.5,
            dotAlpha = 0.3)
 
 ##  Differentially expressed genes between phenotypes

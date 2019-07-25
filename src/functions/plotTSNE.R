@@ -147,8 +147,8 @@ plotTSNE <- function(ctClust, colorby = c("kmeans.cluster", "probe", "patient", 
       scale_y_continuous(breaks=seq(min(tsne_y$y2), max(tsne_y$y2), length.out = 10),
                          minor_breaks = NULL) +
       scale_shape_manual(values = shapeVals) +
-      guides(color=guide_legend(title="probe", order = 1)) +
-      ggtitle("t-SNE between tissues (colored by probe)") +
+      guides(color=guide_legend(title="patient", order = 1)) +
+      ggtitle("t-SNE colored by patient") +
       theme_minimal() +
       theme(#axis.line=element_blank(),
         panel.border=element_rect(fill=NA, color="gray75", size=0.4),
@@ -188,8 +188,8 @@ plotTSNE <- function(ctClust, colorby = c("kmeans.cluster", "probe", "patient", 
       scale_y_continuous(breaks=seq(min(tsne_y$y2), max(tsne_y$y2), length.out = 10),
                          minor_breaks = NULL) +
       scale_shape_manual(values = shapeVals) +
-      guides(color=guide_legend(title="probe", order = 1)) +
-      ggtitle("t-SNE between tissues (colored by probe)") +
+      guides(color=guide_legend(title="inflamation", order = 1)) +
+      ggtitle("t-SNE colored by inflamed site") +
       theme_minimal() +
       theme(#axis.line=element_blank(),
         panel.border=element_rect(fill=NA, color="gray75", size=0.4),
