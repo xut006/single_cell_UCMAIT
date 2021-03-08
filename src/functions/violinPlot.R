@@ -9,12 +9,12 @@ violinPlot <- function(ctGenes, byFactor, factorOrder, groupLabel,
     #### set up plotting data ####
     ## account for kmeans.cluster column when in use
     if(byFactor != "kmeans.cluster"){
-      idCols <- as.numeric(8)
+      idCols <- as.numeric(10)
       if("kmeans.cluster" %in% names(ctGenes)){
         ctGenes <- subset(ctGenes, select = -kmeans.cluster)
       }
     } else{
-      idCols <- as.numeric(9)
+      idCols <- as.numeric(11)
       ## select specific subclusters if specified in factorOrder
       ctGenes <- subset(ctGenes, kmeans.cluster %in% factorOrder)
     }
